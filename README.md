@@ -37,6 +37,18 @@ export GOOGLE_API_KEY="your-key"
 
 You can now run with any LiteLLM supported model tag via litellm_model_name
 
+## Utilities
+
+**Run all datasets:**
+```bash
+uv run utilities/run_all_datasets.py <datasets_directory> [model]
+```
+
+**Run all tasks in a dataset:**
+```bash
+uv run utilities/run_all_tasks.py <dataset> [model]
+```
+
 ## Web Interface
 
 Start the Next.js dashboard to view traces and results:
