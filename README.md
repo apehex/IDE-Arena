@@ -22,7 +22,7 @@ uv run main.py bench --dataset /path_to_directory/golden --agent oracle --model 
 **AI Agent (Real Model)**
 
 ```bash
-uv run main.py bench --dataset /path_to_directory/stubbed --agent harness --model litellm_model_name --task-id name_of_task
+uv run main.py bench --dataset /path_to_directory/stubbed --agent gladiator --model litellm_model_name --task-id name_of_task
 ```
 
 **Controlling Agent Iterations**
@@ -30,7 +30,7 @@ uv run main.py bench --dataset /path_to_directory/stubbed --agent harness --mode
 You can limit the maximum number of iterations an agent can take using the `--max-iterations` flag (default: 35):
 
 ```bash
-uv run main.py bench --dataset /path/to/dataset --agent harness --model gpt-4 --task-id task_name --max-iterations 60
+uv run main.py bench --dataset /path/to/dataset --agent gladiator --model gpt-4 --task-id task_name --max-iterations 35
 ```
 
 ## Environment Setup
@@ -65,8 +65,8 @@ uv run utilities/run_all_tasks.py <dataset> [model] [--start-from task_name] [--
 - `<dataset>`: Path to dataset directory (searches both absolute path and `datasets/<dataset>`)
 - `[model]`: Model name (defaults to "gpt-5"). Special values:
   - `oracle`: Uses oracle agent with oracle model
-  - `nullagent`: Uses harness agent with nullagent model
-  - Any other value: Uses harness agent with specified model
+  - `nullagent`: Uses a null gladiator agent: nullagent
+  - Any other value: Uses gladiator agent with specified model
 - `[--start-from task_name]`: Resume from a specific task (for interrupted/partial runs)
 - `[--max-iterations N]`: Maximum iterations per task (default: 35)
 
@@ -75,6 +75,10 @@ uv run utilities/run_all_tasks.py <dataset> [model] [--start-from task_name] [--
 Start the Next.js dashboard to view traces and results:
 
 ```bash
+cd app
+
+npm i
+
 npm run dev
 ```
 

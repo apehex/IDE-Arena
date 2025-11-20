@@ -69,10 +69,10 @@ def main():
         agent = "oracle"
         model = "oracle"
     elif model == "nullagent":
-        agent = "harness"
+        agent = "gladiator"
         model = "nullagent"
     else:
-        agent = "harness"
+        agent = "gladiator"
 
     print(f"Running tasks in dataset '{dataset}' with agent: {agent}, model: {model}")
     print(f"Max iterations per task: {max_iterations}")
@@ -124,19 +124,18 @@ def main():
         results[task] = success
         print("-" * 60)
 
-    print(f"\nSUMMARY for dataset '{dataset}' with agent '{agent}', model '{model}':")
-    successful = sum(results.values())
-    total = len(results)
+    # print(f"\nSUMMARY for dataset '{dataset}' with agent '{agent}', model '{model}':")
+    # successful = sum(results.values())
+    # total = len(results)
 
-    print(f"Successful: {successful}/{total}")
-    print(f"Failed: {total - successful}/{total}")
-    print(f"Success rate: {successful/total*100:.1f}%")
+    # print(f"Successful: {successful}/{total}")
+    # print(f"Failed: {total - successful}/{total}")
+    # print(f"Success rate: {successful/total*100:.1f}%")
 
-    print("\nDetailed results:")
-    for task, success in results.items():
-        status = "yes:" if success else "no:"
-        print(f"  {status} {task}")
-
+    # print("\nDetailed results:")
+    # for task, success in results.items():
+    #     status = "yes:" if success else "no:"
+    #     print(f"  {status} {task}")
 
 if __name__ == "__main__":
     main()

@@ -223,8 +223,8 @@ def deploy_agent_in_container(
             command=["git", "apply", f"tasks/{task_id}/task_diff.txt"],
         )
         return {"success": result["success"], "output": result["output"]}
-    elif agent_name == "harness":
-        print(f"AGENT_UTILS: Creating harness agent with model {model_name}")
+    elif agent_name == "gladiator":
+        print(f"AGENT_UTILS: Creating gladiator agent with model {model_name}")
 
         # Analyze task requirements to generate appropriate guidance
         analysis = analyze_task_requirements(task_data)
@@ -346,4 +346,4 @@ START: List likely directories, grep for relevant symbols, confirm the target fi
                 "conversation_history": result.get("conversation_history", []),
             }
     else:
-        raise ValueError(f"Unsupported agent: {agent_name}")
+        raise ValueError(f"Unsupported agent: {agent_name}. Use 'oracle' or 'gladiator'.")

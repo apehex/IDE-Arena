@@ -2113,8 +2113,9 @@ Always explain your reasoning and approach clearly.
                     tool_choice="auto",
                     max_tokens=self.max_tokens,
                     temperature=self.temperature,
-                    **extra_params,
-                )
+                        **extra_params,
+                    )
+                print(f"HARNESS: LLM API call succeeded, processing response...")
                 message = response.choices[0].message
 
                 if "gemini" in self.model_name.lower() and message.content is None:
@@ -2237,11 +2238,15 @@ Always explain your reasoning and approach clearly.
                     break
 
             except Exception as e:
+                print(f"HARNESS: EXCEPTION CAUGHT IN ITERATION {iterations}: {type(e).__name__}: {str(e)}")
+                import traceback
+                print(f"HARNESS: Traceback:\n{traceback.format_exc()}")
                 return {
                     "success": False,
-                    "error": f"Error during execution: {str(e)}",
+                    "error": f"Error during execution at iteration {iterations}: {type(e).__name__}: {str(e)}",
                     "iterations": iterations,
                     "conversation_history": conversation_history,
+                    "made_code_changes": made_code_changes,
                 }
 
         return {

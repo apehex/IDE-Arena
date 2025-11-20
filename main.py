@@ -226,7 +226,7 @@ def list_models():
 @app.command()
 def bench(
     dataset: str = typer.Option(..., help="Dataset name to use"),
-    agent: str = typer.Option(..., help="Agent type to run. Options: oracle, harness"),
+    agent: str = typer.Option(..., help="Agent type to run. Options: oracle, gladiator"),
     model_name: str = typer.Option(
         ..., "--model", help="Model name (oracle or actual model)"
     ),
@@ -299,11 +299,11 @@ def bench(
                         verbose, "Model name must be oracle for oracle agent", "error"
                     )
                     raise typer.Exit(1)
-            elif agent == "harness":
+            elif agent == "gladiator":
                 if model_name == "oracle":
                     vprint(
                         verbose,
-                        "Model name must be a real model for harness agent",
+                        "Model name must be a real model for gladiator agent",
                         "error",
                     )
 
@@ -665,15 +665,26 @@ temp/"""
 
                         vctx.log("Deploying agent...")
 
-                        agent_result = deploy_agent_in_container(
-                            container=container,
-                            agent_name=agent,
-                            task_id=current_task_id,
-                            model_name=model_name,
-                            task_data=task_data,
-                            verbose=verbose,
-                            max_iterations=max_iterations,
-                        )
+                        try:
+                            agent_result = deploy_agent_in_container(
+                                container=container,
+                                agent_name=agent,
+                                task_id=current_task_id,
+                                model_name=model_name,
+                                task_data=task_data,
+                                verbose=verbose,
+                                max_iterations=max_iterations,
+                            )
+                        except Exception as e:
+                            print(f"AGENT DEPLOYMENT FAILED WITH EXCEPTION: {type(e).__name__}: {str(e)}")
+                            import traceback
+                            print(f"Traceback: {traceback.format_exc()}")
+                            # Create a minimal agent_result so grading can still run
+                            agent_result = {
+                                "success": False,
+                                "error": f"Agent crashed: {str(e)}",
+                                "conversation_history": [],
+                            }
 
                         vctx.log(f"Agent deployment result: {agent_result}", "debug")
 
