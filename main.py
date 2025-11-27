@@ -411,16 +411,31 @@ def bench(
                 for current_task_id in task_ids:
                     vctx.log(f"Running task {current_task_id}...")
                     try:
-                        vctx.log("Building Docker image...")
-                        ds_label = Path(dataset).name
-                        safe_label = re.sub(r"[^a-z0-9_.-]", "-", ds_label.lower())
-                        image_tag = f"{safe_label}_test_image"
-                        image, build_logs = client.images.build(
-                            path=str(dataset_dir), tag=image_tag
-                        )
-                        for chunk in build_logs:
-                            if "stream" in chunk:
-                                vctx.log(chunk["stream"].strip(), "debug")
+                        # Check for pre-built task image from validate-docker (Cloud Build)
+                        # This is passed via TASK_IMAGE env var from the K8s job
+                        pre_built_image = os.environ.get("TASK_IMAGE")
+                        if pre_built_image:
+                            vctx.log(f"Pulling pre-built task image: {pre_built_image}")
+                            try:
+                                image = client.images.pull(pre_built_image)
+                                image_tag = pre_built_image
+                                vctx.log(f"Successfully pulled pre-built image: {pre_built_image}")
+                            except Exception as pull_err:
+                                vctx.log(f"Failed to pull pre-built image: {pull_err}", "warning")
+                                vctx.log("Falling back to local Docker build...", "warning")
+                                pre_built_image = None  # Fall back to building
+
+                        if not pre_built_image:
+                            vctx.log("Building Docker image...")
+                            ds_label = Path(dataset).name
+                            safe_label = re.sub(r"[^a-z0-9_.-]", "-", ds_label.lower())
+                            image_tag = f"{safe_label}_test_image"
+                            image, build_logs = client.images.build(
+                                path=str(dataset_dir), tag=image_tag
+                            )
+                            for chunk in build_logs:
+                                if "stream" in chunk:
+                                    vctx.log(chunk["stream"].strip(), "debug")
 
                         vctx.log("Running Docker container...")
                         env_vars = {}
