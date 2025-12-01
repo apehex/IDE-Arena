@@ -1143,20 +1143,52 @@ class EnhancedTools:
                 content = edit.get("content", "")
                 line_idx = max(0, line_number - 1)
 
-                if line_idx < len(lines):
-                    old_content = lines[line_idx].rstrip("\n")
-                    lines[line_idx] = content + "\n"
-                    changes_made.append(
-                        f"Line {line_number}: Replaced '{old_content[:50]}...' with '{content[:50]}...'"
-                    )
+                if '\n' in content:
+                    replacement_lines = content.split('\n')
+                    replacement_lines = [line + '\n' for line in replacement_lines[:-1]] + [replacement_lines[-1] + '\n' if replacement_lines[-1] else '']
+
+                    if line_number == 1 and len(replacement_lines) > 10 and replacement_lines[0].startswith('#!/usr/bin/env'):
+                        lines.clear()
+                        lines.extend(replacement_lines)
+                        changes_made.append(
+                            f"Line {line_number}: Complete file replacement with {len(replacement_lines)} lines"
+                        )
+                    elif line_idx < len(lines):
+                        old_content = lines[line_idx].rstrip("\n")
+
+                        lines[line_idx] = replacement_lines[0]
+
+                        for i, new_line in enumerate(replacement_lines[1:], 1):
+                            lines.insert(line_idx + i, new_line)
+                        changes_made.append(
+                            f"Line {line_number}: Replaced '{old_content[:50]}...' with {len(replacement_lines)} lines starting with '{replacement_lines[0][:50]}...'"
+                        )
+                    else:
+                        while len(lines) < line_number:
+                            lines.append("\n")
+
+                        for i, new_line in enumerate(replacement_lines):
+                            if line_number - 1 + i < len(lines):
+                                lines[line_number - 1 + i] = new_line
+                            else:
+                                lines.append(new_line)
+                        changes_made.append(
+                            f"Line {line_number}: Added {len(replacement_lines)} lines starting with '{replacement_lines[0][:50]}...' (extended file)"
+                        )
                 else:
-                    # Line doesn't exist, extend the file to that line
-                    while len(lines) < line_number:
-                        lines.append("\n")
-                    lines[line_number - 1] = content + "\n"
-                    changes_made.append(
-                        f"Line {line_number}: Added '{content[:50]}...' (extended file)"
-                    )
+                    if line_idx < len(lines):
+                        old_content = lines[line_idx].rstrip("\n")
+                        lines[line_idx] = content + "\n"
+                        changes_made.append(
+                            f"Line {line_number}: Replaced '{old_content[:50]}...' with '{content[:50]}...'"
+                        )
+                    else:
+                        while len(lines) < line_number:
+                            lines.append("\n")
+                        lines[line_number - 1] = content + "\n"
+                        changes_made.append(
+                            f"Line {line_number}: Added '{content[:50]}...' (extended file)"
+                        )
 
             # Apply inserts (in reverse line order to avoid shifting issues)
             for edit in sorted(
@@ -1202,6 +1234,16 @@ class EnhancedTools:
                     error_msg = f"Python syntax error in {file_path}: {e.msg} at line {e.lineno}"
                     print(f"HARNESS: {error_msg}")
                     print(f"HARNESS: Changes that would have been applied: {changes_made}")
+
+                    content_lines = content.splitlines()
+                    if e.lineno and 1 <= e.lineno <= len(content_lines):
+                        start_line = max(1, e.lineno - 2)
+                        end_line = min(len(content_lines), e.lineno + 2)
+                        print(f"HARNESS: Content around error (lines {start_line}-{end_line}):")
+                        for i in range(start_line - 1, end_line):
+                            prefix = ">>> " if i + 1 == e.lineno else "    "
+                            print(f"HARNESS: {prefix}{i+1:3}: {content_lines[i]}")
+
                     return {
                         "success": False,
                         "error": error_msg,
@@ -1253,6 +1295,8 @@ class EnhancedTools:
                         "target_file": str(
                             Path(file_path).relative_to(Path(self.base_path))
                         ),
+                        "content_size": len(content),
+                        "attempted_changes": changes_made,
                     }
 
                 print(f"HARNESS: File write succeeded, verifying content...")
