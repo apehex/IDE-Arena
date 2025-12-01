@@ -801,10 +801,20 @@ def bench(
                                 pretty_print_conversation(agent_result, verbose)
 
                             vctx.log(f"Running grading (attempt {attempt_num}/{pass_at_k})...")
+
+                            test_type = task_data["parser_name"]
+                            task_test_dir = dataset_dir / "tasks" / current_task_id
+                            if (task_test_dir / "task_tests.py").exists():
+                                test_type = "pytest"
+                            elif (task_test_dir / "task_tests.js").exists():
+                                test_type = "jest"
+                            elif (task_test_dir / "task_tests.java").exists():
+                                test_type = "maven"
+
                             grading_result = run_grading_in_container(
                                 container=container,
                                 task_id=current_task_id,
-                                test_type=task_data["parser_name"],
+                                test_type=test_type,
                                 dataset_dir=str(dataset_dir),
                                 agent_execution_data=agent_result,
                             )
