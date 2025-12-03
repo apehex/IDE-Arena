@@ -1464,21 +1464,32 @@ class EnhancedTools:
                         old_string, new_string, 1
                     )  # Replace only first occurrence
 
-                    # Write back to file
-                    escaped_content = new_content.replace('"', '\\"').replace(
-                        "$", "\\$"
-                    )
-                    write_result = run_command_in_container(
-                        self.container,
-                        [
-                            "sh",
-                            "-c",
-                            f'echo "{escaped_content}" > {self.base_path / file_path}',
-                        ],
+                    # Write back using put_archive (no shell interpretation)
+                    import io
+                    import tarfile
+
+                    full_path = self.base_path / file_path
+                    parent_dir = str(full_path.parent)
+
+                    # Ensure parent directory exists
+                    run_command_in_container(
+                        self.container, ["mkdir", "-p", parent_dir]
                     )
 
+                    # Create tar archive with new content
+                    tar_stream = io.BytesIO()
+                    file_data = new_content.encode('utf-8')
+
+                    with tarfile.open(fileobj=tar_stream, mode='w') as tar:
+                        tarinfo = tarfile.TarInfo(name=full_path.name)
+                        tarinfo.size = len(file_data)
+                        tar.addfile(tarinfo, io.BytesIO(file_data))
+
+                    tar_stream.seek(0)
+                    self.container.put_archive(parent_dir, tar_stream.getvalue())
+
                     return {
-                        "success": write_result["success"],
+                        "success": True,
                         "message": f"Successfully replaced text in {file_path}",
                         "file_path": file_path,
                         "old_string": old_string,
